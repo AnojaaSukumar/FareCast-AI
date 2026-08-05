@@ -923,6 +923,144 @@ with st.container(border=True):
         use_container_width=True,
     )
 
+    # =========================================================
+    # 7. PREDICTION & DECISION LOGIC
+    # =========================================================
+    if analyze_clicked:
+        stops_num = (
+            0
+            if stops == "Non-stop (Direct)"
+            else 1
+            if stops == "1 Stop"
+            else 2
+        )
+
+        class_num = 0 if flight_class == "Economy" else 1
+
+        input_dict = {column: 0 for column in feature_names}
+
+        input_dict["stops"] = stops_num
+        input_dict["class"] = class_num
+        input_dict["duration"] = estimated_duration
+        input_dict["days_left"] = days_left
+
+        if f"airline_{airline}" in input_dict:
+            input_dict[f"airline_{airline}"] = 1
+
+        if f"source_city_{source_city}" in input_dict:
+            input_dict[f"source_city_{source_city}"] = 1
+
+        if f"destination_city_{destination_city}" in input_dict:
+            input_dict[f"destination_city_{destination_city}"] = 1
+
+        if f"departure_time_{departure_time}" in input_dict:
+            input_dict[f"departure_time_{departure_time}"] = 1
+
+        if f"arrival_time_{arrival_time}" in input_dict:
+            input_dict[f"arrival_time_{arrival_time}"] = 1
+
+        input_df = pd.DataFrame([input_dict])
+        input_df = input_df.reindex(columns=feature_names, fill_value=0)
+
+        # Predict price
+        raw_prediction = model.predict(input_df)[0]
+        predicted_price = max(raw_prediction, 1850.0)
+
+        if days_left <= 7:
+            recommendation_class = "buy-urgent"
+            recommendation_title = "🚨 BUY NOW"
+            recommendation_copy = (
+                f"Your flight is only {days_left} day(s) away. "
+                "Fares often rise sharply during the final week, so booking now is the safer decision."
+            )
+        elif days_left > 20:
+            recommendation_class = "wait"
+            recommendation_title = "⏳ WAIT & MONITOR"
+            recommendation_copy = (
+                f"Your flight is {days_left} days away. "
+                "The fare may remain stable, so you can monitor prices before confirming your booking."
+            )
+        else:
+            recommendation_class = "buy-good"
+            recommendation_title = "✅ GOOD TIME TO BUY"
+            recommendation_copy = (
+                f"Your flight is {days_left} days away. "
+                "You are within a practical 1–3 week booking window, so booking now is a sensible choice."
+            )
+
+        if flight_class == "Economy":
+            class_factor_title = "Economy class savings"
+            class_factor_text = "Economy seating keeps the predicted fare lower than Business Class."
+        else:
+            class_factor_title = "Business class premium"
+            class_factor_text = "Business Class adds a significant premium because of upgraded services and seating."
+
+        if days_left <= 7:
+            timing_factor_title = "Short lead-time pressure"
+            timing_factor_text = "The departure date is close, which can increase the estimated ticket fare."
+        elif days_left > 20:
+            timing_factor_title = "Early planning advantage"
+            timing_factor_text = "You are searching early, which gives you more time to monitor fare changes."
+        else:
+            timing_factor_title = "Balanced booking window"
+            timing_factor_text = "Your selected date falls within a commonly practical domestic booking period."
+
+        if airline in ["SpiceJet", "AirAsia", "Indigo", "GO_FIRST"]:
+            airline_factor_title = "Low-cost carrier"
+            airline_factor_text = f"{airline} is treated as a budget-oriented carrier in the model inputs."
+        else:
+            airline_factor_title = "Full-service carrier"
+            airline_factor_text = f"{airline} is treated as a full-service carrier, which may increase the fare."
+
+        route_factor_title = "Route and duration"
+        route_factor_text = f"The selected {stops.lower()} journey has an estimated duration of approximately {estimated_duration:.1f} hours."
+
+        results_html = f"""
+        <section class="result-shell">
+            <div class="result-top">
+                <div>
+                    <p>Estimated ticket fare</p>
+                    <div class="result-price">₹{predicted_price:,.2f}</div>
+                </div>
+
+                <div class="result-route">
+                    {source_city} → {destination_city}<br>
+                    {travel_date.strftime("%d %b %Y")} · {flight_class}
+                </div>
+            </div>
+
+            <div class="recommendation-box {recommendation_class}">
+                <div class="recommendation-title">{recommendation_title}</div>
+                <div class="recommendation-copy">{recommendation_copy}</div>
+            </div>
+
+            <div class="factor-title">Why this fare was estimated</div>
+
+            <div class="factor-grid">
+                <div class="factor-card">
+                    <b>🪑 {class_factor_title}</b>
+                    {class_factor_text}
+                </div>
+
+                <div class="factor-card">
+                    <b>📅 {timing_factor_title}</b>
+                    {timing_factor_text}
+                </div>
+
+                <div class="factor-card">
+                    <b>✈️ {airline_factor_title}</b>
+                    {airline_factor_text}
+                </div>
+
+                <div class="factor-card">
+                    <b>🗺️ {route_factor_title}</b>
+                    {route_factor_text}
+                </div>
+            </div>
+        </section>
+        """
+        st.markdown(results_html, unsafe_allow_html=True)
+
     st.markdown(
         """
         <div class="partner-strip">
@@ -939,7 +1077,7 @@ with st.container(border=True):
 
 
 # =========================================================
-# 7. VALUE CARDS
+# 8. VALUE CARDS
 # =========================================================
 st.markdown(
     """
@@ -988,163 +1126,3 @@ with col_c:
         """,
         unsafe_allow_html=True,
     )
-
-
-# =========================================================
-# 8. PREDICTION LOGIC AND RESULT UI
-# =========================================================
-if analyze_clicked:
-    stops_num = (
-        0
-        if stops == "Non-stop (Direct)"
-        else 1
-        if stops == "1 Stop"
-        else 2
-    )
-
-    class_num = 0 if flight_class == "Economy" else 1
-
-    input_dict = {column: 0 for column in feature_names}
-
-    input_dict["stops"] = stops_num
-    input_dict["class"] = class_num
-    input_dict["duration"] = estimated_duration
-    input_dict["days_left"] = days_left
-
-    if f"airline_{airline}" in input_dict:
-        input_dict[f"airline_{airline}"] = 1
-
-    if f"source_city_{source_city}" in input_dict:
-        input_dict[f"source_city_{source_city}"] = 1
-
-    if f"destination_city_{destination_city}" in input_dict:
-        input_dict[f"destination_city_{destination_city}"] = 1
-
-    if f"departure_time_{departure_time}" in input_dict:
-        input_dict[f"departure_time_{departure_time}"] = 1
-
-    if f"arrival_time_{arrival_time}" in input_dict:
-        input_dict[f"arrival_time_{arrival_time}"] = 1
-
-    input_df = pd.DataFrame([input_dict])
-    input_df = input_df.reindex(columns=feature_names, fill_value=0)
-
-    # Predict price
-    raw_prediction = model.predict(input_df)[0]
-    
-    # Ensure fare doesn't show negative values
-    predicted_price = max(raw_prediction, 1850.0)
-
-    if days_left <= 7:
-        recommendation_class = "buy-urgent"
-        recommendation_title = "🚨 BUY NOW"
-        recommendation_copy = (
-            f"Your flight is only {days_left} day(s) away. "
-            "Fares often rise sharply during the final week, so booking now is the safer decision."
-        )
-
-    elif days_left > 20:
-        recommendation_class = "wait"
-        recommendation_title = "⏳ WAIT & MONITOR"
-        recommendation_copy = (
-            f"Your flight is {days_left} days away. "
-            "The fare may remain stable, so you can monitor prices before confirming your booking."
-        )
-
-    else:
-        recommendation_class = "buy-good"
-        recommendation_title = "✅ GOOD TIME TO BUY"
-        recommendation_copy = (
-            f"Your flight is {days_left} days away. "
-            "You are within a practical 1–3 week booking window, so booking now is a sensible choice."
-        )
-
-    if flight_class == "Economy":
-        class_factor_title = "Economy class savings"
-        class_factor_text = (
-            "Economy seating keeps the predicted fare lower than Business Class."
-        )
-    else:
-        class_factor_title = "Business class premium"
-        class_factor_text = (
-            "Business Class adds a significant premium because of upgraded services and seating."
-        )
-
-    if days_left <= 7:
-        timing_factor_title = "Short lead-time pressure"
-        timing_factor_text = (
-            "The departure date is close, which can increase the estimated ticket fare."
-        )
-    elif days_left > 20:
-        timing_factor_title = "Early planning advantage"
-        timing_factor_text = (
-            "You are searching early, which gives you more time to monitor fare changes."
-        )
-    else:
-        timing_factor_title = "Balanced booking window"
-        timing_factor_text = (
-            "Your selected date falls within a commonly practical domestic booking period."
-        )
-
-    if airline in ["SpiceJet", "AirAsia", "Indigo", "GO_FIRST"]:
-        airline_factor_title = "Low-cost carrier"
-        airline_factor_text = (
-            f"{airline} is treated as a budget-oriented carrier in the model inputs."
-        )
-    else:
-        airline_factor_title = "Full-service carrier"
-        airline_factor_text = (
-            f"{airline} is treated as a full-service carrier, which may increase the fare."
-        )
-
-    route_factor_title = "Route and duration"
-    route_factor_text = (
-        f"The selected {stops.lower()} journey has an estimated duration "
-        f"of approximately {estimated_duration:.1f} hours."
-    )
-
-    results_html = f"""
-    <section class="result-shell">
-        <div class="result-top">
-            <div>
-                <p>Estimated ticket fare</p>
-                <div class="result-price">₹{predicted_price:,.2f}</div>
-            </div>
-
-            <div class="result-route">
-                {source_city} → {destination_city}<br>
-                {travel_date.strftime("%d %b %Y")} · {flight_class}
-            </div>
-        </div>
-
-        <div class="recommendation-box {recommendation_class}">
-            <div class="recommendation-title">{recommendation_title}</div>
-            <div class="recommendation-copy">{recommendation_copy}</div>
-        </div>
-
-        <div class="factor-title">Why this fare was estimated</div>
-
-        <div class="factor-grid">
-            <div class="factor-card">
-                <b>🪑 {class_factor_title}</b>
-                {class_factor_text}
-            </div>
-
-            <div class="factor-card">
-                <b>📅 {timing_factor_title}</b>
-                {timing_factor_text}
-            </div>
-
-            <div class="factor-card">
-                <b>✈️ {airline_factor_title}</b>
-                {airline_factor_text}
-            </div>
-
-            <div class="factor-card">
-                <b>🗺️ {route_factor_title}</b>
-                {route_factor_text}
-            </div>
-        </div>
-    </section>
-    """
-    st.markdown(results_html, unsafe_allow_html=True)
