@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import shap
 import streamlit as st
+import gzip
 
 # 1. Page Configuration
 st.set_page_config(
@@ -90,8 +91,13 @@ st.markdown(
 # 3. Load Trained Model and Features
 @st.cache_resource
 def load_assets():
-    model = joblib.load("model.pkl")
+    # Load the compressed model file
+    with gzip.open("model.pkl.gz", "rb") as f:
+        model = joblib.load(f)
+
+    # Load the features file
     features = joblib.load("model_features.pkl")
+
     return model, features
 
 
