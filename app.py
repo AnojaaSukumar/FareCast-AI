@@ -923,7 +923,7 @@ with st.container(border=True):
         use_container_width=True,
     )
 
-    # =========================================================
+   # =========================================================
     # 7. PREDICTION & DECISION LOGIC
     # =========================================================
     if analyze_clicked:
@@ -1015,65 +1015,42 @@ with st.container(border=True):
         route_factor_title = "Route and duration"
         route_factor_text = f"The selected {stops.lower()} journey has an estimated duration of approximately {estimated_duration:.1f} hours."
 
-        results_html = f"""
-        <section class="result-shell">
-            <div class="result-top">
-                <div>
-                    <p>Estimated ticket fare</p>
-                    <div class="result-price">₹{predicted_price:,.2f}</div>
-                </div>
-
-                <div class="result-route">
-                    {source_city} → {destination_city}<br>
-                    {travel_date.strftime("%d %b %Y")} · {flight_class}
-                </div>
-            </div>
-
-            <div class="recommendation-box {recommendation_class}">
-                <div class="recommendation-title">{recommendation_title}</div>
-                <div class="recommendation-copy">{recommendation_copy}</div>
-            </div>
-
-            <div class="factor-title">Why this fare was estimated</div>
-
-            <div class="factor-grid">
-                <div class="factor-card">
-                    <b>🪑 {class_factor_title}</b>
-                    {class_factor_text}
-                </div>
-
-                <div class="factor-card">
-                    <b>📅 {timing_factor_title}</b>
-                    {timing_factor_text}
-                </div>
-
-                <div class="factor-card">
-                    <b>✈️ {airline_factor_title}</b>
-                    {airline_factor_text}
-                </div>
-
-                <div class="factor-card">
-                    <b>🗺️ {route_factor_title}</b>
-                    {route_factor_text}
-                </div>
-            </div>
-        </section>
-        """
+        results_html = f"""<section class="result-shell">
+<div class="result-top">
+<div>
+<p>Estimated ticket fare</p>
+<div class="result-price">₹{predicted_price:,.2f}</div>
+</div>
+<div class="result-route">
+{source_city} → {destination_city}<br>
+{travel_date.strftime("%d %b %Y")} · {flight_class}
+</div>
+</div>
+<div class="recommendation-box {recommendation_class}">
+<div class="recommendation-title">{recommendation_title}</div>
+<div class="recommendation-copy">{recommendation_copy}</div>
+</div>
+<div class="factor-title">Why this fare was estimated</div>
+<div class="factor-grid">
+<div class="factor-card">
+<b>🪑 {class_factor_title}</b>
+{class_factor_text}
+</div>
+<div class="factor-card">
+<b>📅 {timing_factor_title}</b>
+{timing_factor_text}
+</div>
+<div class="factor-card">
+<b>✈️ {airline_factor_title}</b>
+{airline_factor_text}
+</div>
+<div class="factor-card">
+<b>🗺️ {route_factor_title}</b>
+{route_factor_text}
+</div>
+</div>
+</section>"""
         st.markdown(results_html, unsafe_allow_html=True)
-
-    st.markdown(
-        """
-        <div class="partner-strip">
-            <span>Prediction factors</span>
-            <span class="partner-name">Airline</span>
-            <span class="partner-name">Route</span>
-            <span class="partner-name">Timing</span>
-            <span class="partner-name">Stops</span>
-            <span class="partner-name">Lead time</span>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
 
 
 # =========================================================
