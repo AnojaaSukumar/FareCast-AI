@@ -1,6 +1,5 @@
 from datetime import date
 import gzip
-from pathlib import Path
 
 import joblib
 import numpy as np
@@ -484,13 +483,6 @@ st.markdown(
         color: var(--slate);
     }
 
-    .benefit-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 16px;
-        margin-bottom: 1.25rem;
-    }
-
     .benefit-card {
         background: rgba(255,255,255,.94);
         border: 1px solid rgba(222,226,234,.9);
@@ -498,6 +490,7 @@ st.markdown(
         padding: 22px;
         box-shadow: 0 12px 30px rgba(28,38,55,.08);
         transition: transform .22s ease, box-shadow .22s ease;
+        height: 100%;
     }
 
     .benefit-card:hover {
@@ -662,7 +655,6 @@ st.markdown(
         }
 
         .route-summary,
-        .benefit-grid,
         .factor-grid {
             grid-template-columns: 1fr;
         }
@@ -905,29 +897,25 @@ with st.container(border=True):
     if days_left <= 0:
         days_left = 1
 
-    st.markdown(
-        f"""
-        <div class="route-summary">
-            <div class="route-main">
-                <span style="opacity:.55;">Route</span><br>
-                <b>{source_city}</b>
-                <span style="padding:0 7px; color:#A4AAB7;">→</span>
-                <b>{destination_city}</b>
-            </div>
-
-            <div class="route-meta">
-                Estimated journey
-                <strong>⏱ {estimated_duration:.1f} hours</strong>
-            </div>
-
-            <div class="route-meta">
-                Booking lead time
-                <strong>📅 {days_left} day(s)</strong>
-            </div>
+    route_summary_html = f"""
+    <div class="route-summary">
+        <div class="route-main">
+            <span style="opacity:.55;">Route</span><br>
+            <b>{source_city}</b>
+            <span style="padding:0 7px; color:#A4AAB7;">→</span>
+            <b>{destination_city}</b>
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        <div class="route-meta">
+            Estimated journey
+            <strong>⏱ {estimated_duration:.1f} hours</strong>
+        </div>
+        <div class="route-meta">
+            Booking lead time
+            <strong>📅 {days_left} day(s)</strong>
+        </div>
+    </div>
+    """
+    st.markdown(route_summary_html, unsafe_allow_html=True)
 
     analyze_clicked = st.button(
         "Analyze fare & get decision advice",
@@ -959,29 +947,47 @@ st.markdown(
         <h2>Make your next booking with more confidence</h2>
         <p>A focused decision assistant built around the factors that affect airfare.</p>
     </div>
+    """,
+    unsafe_allow_html=True,
+)
 
-    <div class="benefit-grid">
+col_a, col_b, col_c = st.columns(3)
+
+with col_a:
+    st.markdown(
+        """
         <article class="benefit-card">
             <div class="benefit-icon">⚡</div>
             <h3>Instant fare estimate</h3>
             <p>Turn your route and travel choices into a clear estimated ticket price in seconds.</p>
         </article>
+        """,
+        unsafe_allow_html=True,
+    )
 
+with col_b:
+    st.markdown(
+        """
         <article class="benefit-card">
             <div class="benefit-icon">🧭</div>
             <h3>Simple buy-or-wait advice</h3>
             <p>Get a direct recommendation based on how soon your selected departure date is.</p>
         </article>
+        """,
+        unsafe_allow_html=True,
+    )
 
+with col_c:
+    st.markdown(
+        """
         <article class="benefit-card">
             <div class="benefit-icon">🔎</div>
             <h3>Transparent fare factors</h3>
             <p>See the key trip choices that contributed to the model's price estimate.</p>
         </article>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 # =========================================================
@@ -1097,50 +1103,48 @@ if analyze_clicked:
         f"of approximately {estimated_duration:.1f} hours."
     )
 
-    st.markdown(
-        f"""
-        <section class="result-shell">
-            <div class="result-top">
-                <div>
-                    <p>Estimated ticket fare</p>
-                    <div class="result-price">₹{predicted_price:,.2f}</div>
-                </div>
-
-                <div class="result-route">
-                    {source_city} → {destination_city}<br>
-                    {travel_date.strftime("%d %b %Y")} · {flight_class}
-                </div>
+    results_html = f"""
+    <section class="result-shell">
+        <div class="result-top">
+            <div>
+                <p>Estimated ticket fare</p>
+                <div class="result-price">₹{predicted_price:,.2f}</div>
             </div>
 
-            <div class="recommendation-box {recommendation_class}">
-                <div class="recommendation-title">{recommendation_title}</div>
-                <div class="recommendation-copy">{recommendation_copy}</div>
+            <div class="result-route">
+                {source_city} → {destination_city}<br>
+                {travel_date.strftime("%d %b %Y")} · {flight_class}
+            </div>
+        </div>
+
+        <div class="recommendation-box {recommendation_class}">
+            <div class="recommendation-title">{recommendation_title}</div>
+            <div class="recommendation-copy">{recommendation_copy}</div>
+        </div>
+
+        <div class="factor-title">Why this fare was estimated</div>
+
+        <div class="factor-grid">
+            <div class="factor-card">
+                <b>🪑 {class_factor_title}</b>
+                {class_factor_text}
             </div>
 
-            <div class="factor-title">Why this fare was estimated</div>
-
-            <div class="factor-grid">
-                <div class="factor-card">
-                    <b>🪑 {class_factor_title}</b>
-                    {class_factor_text}
-                </div>
-
-                <div class="factor-card">
-                    <b>📅 {timing_factor_title}</b>
-                    {timing_factor_text}
-                </div>
-
-                <div class="factor-card">
-                    <b>✈️ {airline_factor_title}</b>
-                    {airline_factor_text}
-                </div>
-
-                <div class="factor-card">
-                    <b>🗺️ {route_factor_title}</b>
-                    {route_factor_text}
-                </div>
+            <div class="factor-card">
+                <b>📅 {timing_factor_title}</b>
+                {timing_factor_text}
             </div>
-        </section>
-        """,
-        unsafe_allow_html=True,
-    )
+
+            <div class="factor-card">
+                <b>✈️ {airline_factor_title}</b>
+                {airline_factor_text}
+            </div>
+
+            <div class="factor-card">
+                <b>🗺️ {route_factor_title}</b>
+                {route_factor_text}
+            </div>
+        </div>
+    </section>
+    """
+    st.markdown(results_html, unsafe_allow_html=True)
