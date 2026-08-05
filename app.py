@@ -726,10 +726,6 @@ st.markdown(
     <div class="nav-shell">
         <div class="nav-row">
             <div class="nav-item active">Fare predictor</div>
-            <div class="nav-item">Route insights</div>
-            <div class="nav-item">Price advice</div>
-            <div class="nav-item">Smart savings</div>
-            <div class="nav-item">Travel confidence</div>
         </div>
     </div>
 
